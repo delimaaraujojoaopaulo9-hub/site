@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NovaTech 3D — Powered by Higgsfield AI</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <canvas id="canvas-bg"></canvas>
+
+  <nav>
+    <div class="logo">NOVATECH</div>
+    <ul>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#gallery">Galeria</a></li>
+      <li><a href="#stats">Stats</a></li>
+      <li><a href="#cta">Contato</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero -->
+  <section id="hero">
+    <div class="hero-tag">✦ Powered by Higgsfield AI</div>
+    <h1>O Futuro é<br /><span>Tridimensional</span></h1>
+    <p class="hero-sub">
+      Experiências imersivas criadas com inteligência artificial generativa.
+      Visualize, explore e interaja com mundos 3D renderizados em tempo real.
+    </p>
+    <div class="hero-buttons">
+      <a href="#gallery" class="btn-primary">Ver Galeria AI</a>
+      <a href="#features" class="btn-outline">Saiba Mais</a>
+    </div>
+    <canvas id="model-viewer"></canvas>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="section-title reveal">
+      <h2>Por que escolher a <span>NovaTech</span>?</h2>
+      <div class="neon-line"></div>
+      <p>Tecnologia de ponta aliada à criatividade sem limites.</p>
+    </div>
+    <div class="cards">
+      <div class="card reveal">
+        <div class="card-icon">🧊</div>
+        <h3>Renderização 3D em Tempo Real</h3>
+        <p>Engine WebGL de alta performance com suporte a sombras dinâmicas e iluminação global.</p>
+      </div>
+      <div class="card reveal">
+        <div class="card-icon">🤖</div>
+        <h3>IA Generativa Higgsfield</h3>
+        <p>Criação de imagens e vídeos 4K ultra-realistas com modelos de última geração da Higgsfield AI.</p>
+      </div>
+      <div class="card reveal">
+        <div class="card-icon">⚡</div>
+        <h3>Performance Extrema</h3>
+        <p>Otimizado para 60fps+ em dispositivos modernos com carregamento lazy e streaming progressivo.</p>
+      </div>
+      <div class="card reveal">
+        <div class="card-icon">🌌</div>
+        <h3>Mundos Imersivos</h3>
+        <p>Ambientes procedurais gerados por IA com física realista, partículas e animações fluidas.</p>
+      </div>
+      <div class="card reveal">
+        <div class="card-icon">🎨</div>
+        <h3>Design Adaptativo</h3>
+        <p>Interface responsiva que se adapta a qualquer tela, mantendo a qualidade visual e a experiência.</p>
+      </div>
+      <div class="card reveal">
+        <div class="card-icon">🔒</div>
+        <h3>Segurança Total</h3>
+        <p>Infraestrutura edge-first com criptografia end-to-end e zero-knowledge para seus dados.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section id="gallery">
+    <div class="section-title reveal">
+      <h2>Galeria <span>Higgsfield AI</span></h2>
+      <div class="neon-line"></div>
+      <p>Imagens geradas pela IA generativa da Higgsfield — nano_banana_pro 4K.</p>
+    </div>
+    <div class="gallery-grid">
+      <div class="gallery-item reveal">
+        <img src="assets/img/city.webp" alt="Cidade Futurista 3D" loading="lazy" />
+        <div class="overlay"><span>✦ Cidade Futurista 3D</span></div>
+      </div>
+      <div class="gallery-item reveal">
+        <img src="assets/img/geo.webp" alt="Geometrias Abstratas" loading="lazy" />
+        <div class="overlay"><span>✦ Geometrias Abstratas</span></div>
+      </div>
+      <div class="gallery-item reveal">
+        <img src="assets/img/hud.webp" alt="Interface Holográfica" loading="lazy" />
+        <div class="overlay"><span>✦ Interface Holográfica</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section id="stats">
+    <div class="section-title reveal">
+      <h2>Números que <span>Impressionam</span></h2>
+      <div class="neon-line"></div>
+    </div>
+    <div class="stats-grid">
+      <div class="reveal">
+        <div class="stat-number" data-target="4200">0</div>
+        <div class="stat-label">Projetos Entregues</div>
+      </div>
+      <div class="reveal">
+        <div class="stat-number" data-target="99">0</div>
+        <div class="stat-label">% Satisfação</div>
+      </div>
+      <div class="reveal">
+        <div class="stat-number" data-target="180">0</div>
+        <div class="stat-label">Países Atendidos</div>
+      </div>
+      <div class="reveal">
+        <div class="stat-number" data-target="12">0</div>
+        <div class="stat-label">Anos de Inovação</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="cta">
+    <div class="section-title reveal">
+      <h2>Pronto para entrar no <span>futuro</span>?</h2>
+      <p>Comece agora sua jornada 3D com a NovaTech. Sem burocracia, só inovação.</p>
+      <a href="#" class="btn-primary">Começar Agora — É Grátis</a>
+    </div>
+  </section>
+
+  <footer>
+    <span>© 2026 NovaTech. Todos os direitos reservados.</span>
+    <span>Imagens geradas por <strong style="color:#00d4ff">Higgsfield AI</strong></span>
+  </footer>
+
+  <script src="js/three.min.js"></script>
+  <script src="js/scene.js"></script>
+</body>
+</html>
