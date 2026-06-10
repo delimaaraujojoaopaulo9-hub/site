@@ -2,46 +2,46 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useScrolled } from '@/hooks/useScrolled';
 
 const links = [
-  { label: 'Coleção', href: '#produtos' },
-  { label: 'Novidades', href: '#produtos' },
+  { label: 'Coleção', href: '#colecao' },
+  { label: 'Categorias', href: '#categorias' },
+  { label: 'Novidades', href: '#novidades' },
   { label: 'Sobre', href: '#sobre' },
-  { label: 'Contato', href: '#contato' },
 ];
 
 export default function Navbar() {
-  const scrolled = useScrolled(20);
+  const scrolled = useScrolled(40);
   const [open, setOpen] = useState(false);
 
   return (
-    <motion.header
-      initial={{ y: -80, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
+    <header
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
         scrolled
-          ? 'border-b border-steel/30 bg-paper/90 backdrop-blur-md'
+          ? 'border-b border-ink/10 bg-paper/95 backdrop-blur-md shadow-sm'
           : 'bg-transparent'
       }`}
     >
       <nav className="container-content flex h-16 items-center justify-between md:h-20">
         <Link
           href="/"
-          className="font-display text-xl font-bold uppercase tracking-brand text-ink"
+          className={`font-display text-xl font-bold uppercase tracking-brand transition-colors ${
+            scrolled ? 'text-ink' : 'text-paper'
+          }`}
         >
           ATELIÊ
         </Link>
 
-        {/* Desktop */}
         <ul className="hidden items-center gap-10 md:flex">
           {links.map((link) => (
             <li key={link.label}>
               <Link
                 href={link.href}
-                className="text-xs font-medium uppercase tracking-[0.2em] text-ash transition-colors hover:text-ink"
+                className={`relative text-xs font-medium uppercase tracking-[0.2em] transition-colors after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-current after:transition-all hover:after:w-full ${
+                  scrolled ? 'text-ash hover:text-ink' : 'text-mist hover:text-paper'
+                }`}
               >
                 {link.label}
               </Link>
@@ -49,55 +49,76 @@ export default function Navbar() {
           ))}
         </ul>
 
-        {/* Mobile toggle */}
+        <div className="hidden items-center gap-4 md:flex">
+          <Link
+            href="#colecao"
+            className={`text-xs font-medium uppercase tracking-[0.2em] transition-colors ${
+              scrolled ? 'text-ash hover:text-ink' : 'text-mist hover:text-paper'
+            }`}
+          >
+            Entrar
+          </Link>
+          <Link
+            href="#colecao"
+            className={`border px-5 py-2 text-xs font-medium uppercase tracking-[0.2em] transition-colors ${
+              scrolled
+                ? 'border-ink bg-ink text-paper hover:bg-graphite'
+                : 'border-paper text-paper hover:bg-paper hover:text-ink'
+            }`}
+          >
+            Ver Coleção
+          </Link>
+        </div>
+
         <button
           aria-label="Abrir menu"
-          aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 md:hidden"
+          className="flex h-10 w-10 flex-col items-center justify-center gap-[5px] md:hidden"
         >
-          <span
-            className={`h-px w-6 bg-ink transition-transform ${
-              open ? 'translate-y-2 rotate-45' : ''
-            }`}
-          />
-          <span
-            className={`h-px w-6 bg-ink transition-opacity ${
-              open ? 'opacity-0' : ''
-            }`}
-          />
-          <span
-            className={`h-px w-6 bg-ink transition-transform ${
-              open ? '-translate-y-2 -rotate-45' : ''
-            }`}
-          />
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className={`block h-px w-6 transition-all duration-300 ${scrolled ? 'bg-ink' : 'bg-paper'} ${
+                open && i === 0 ? 'translate-y-[7px] rotate-45'
+                : open && i === 1 ? 'opacity-0 scale-x-0'
+                : open && i === 2 ? '-translate-y-[7px] -rotate-45'
+                : ''
+              }`}
+            />
+          ))}
         </button>
       </nav>
 
-      {/* Mobile menu */}
       <AnimatePresence>
         {open && (
-          <motion.ul
+          <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="overflow-hidden border-t border-steel/30 bg-paper md:hidden"
+            className="overflow-hidden border-t border-ink/10 bg-paper"
           >
-            {links.map((link) => (
-              <li key={link.label} className="border-b border-steel/10">
-                <Link
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="block px-6 py-4 text-sm font-medium uppercase tracking-[0.2em] text-ink"
-                >
-                  {link.label}
+            <ul className="container-content divide-y divide-ink/5 pb-4 pt-2">
+              {links.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    className="block py-4 text-sm font-medium uppercase tracking-[0.2em] text-ink"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+              <li className="pt-4">
+                <Link href="#colecao" onClick={() => setOpen(false)} className="btn-primary w-full text-center">
+                  Ver Coleção
                 </Link>
               </li>
-            ))}
-          </motion.ul>
+            </ul>
+          </motion.div>
         )}
       </AnimatePresence>
-    </motion.header>
+    </header>
   );
 }
