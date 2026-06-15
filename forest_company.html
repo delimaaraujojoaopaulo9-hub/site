@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FOREST COMPANY</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;600;700&display=swap');
+
+  :root {
+    --deep:  #04080f;
+    --mid:   #0d2452;
+    --bright:#1a4fb5;
+    --neon:  #4da6ff;
+    --neon2: #00d4ff;
+    --red:   #ff3b30;
+    --amber: #ffb700;
+    --text:  #c8dff5;
+    --bg:    #030810;
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); font-family:'Rajdhani',sans-serif; color:var(--text); user-select:none; }
+
+  .scanline { position:fixed; inset:0; z-index:500; pointer-events:none; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 4px); }
+
+  /* ── PAGES ── */
+  .page { position:fixed; inset:0; display:flex; flex-direction:row; align-items:stretch; opacity:0; pointer-events:none; transition:opacity .7s ease; z-index:1; }
+  .page.active { opacity:1; pointer-events:all; z-index:10; }
+
+  .grid-bg { position:absolute; inset:0; pointer-events:none; z-index:0; background:repeating-linear-gradient(0deg,transparent,transparent 79px,rgba(77,166,255,.05) 80px),repeating-linear-gradient(90deg,transparent,transparent 79px,rgba(77,166,255,.05) 80px); animation:gdrift 14s linear infinite; }
+  @keyframes gdrift { to{background-position:0 80px,80px 0} }
+  @keyframes smove  { to{background-position:0 50px} }
+  @keyframes blk    { 0%,100%{opacity:1} 50%{opacity:.15} }
+
+  /* ══════════════════════════════════════════
+     PAGE 1 — INTRO  (looping até o toque)
+  ══════════════════════════════════════════ */
+  #page1 { background:#000; cursor:pointer; flex-direction:column; justify-content:center; align-items:center; }
+  #bg-video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.45; z-index:0; }
+  .video-overlay { position:absolute; inset:0; z-index:1; background:linear-gradient(160deg,rgba(3,8,16,.4),rgba(3,8,16,.75)); }
+
+  .p1-inner { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.5vh; width:100%; height:100%; padding:2vh 2vw; }
+
+  /* ── BAOBAB HOLO TREE (maior, girando + desfragmentando) ── */
+  .holo-tree { width:clamp(300px,30vw,520px); height:clamp(300px,30vw,520px); flex-shrink:0; position:relative; animation:hfloat 4s ease-in-out infinite; }
+  @keyframes hfloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)} }
+  .holo-tree svg { width:100%; height:100%; transform-origin:50% 50%; animation:hglow 3s ease-in-out infinite alternate, hspin 22s linear infinite; }
+  @keyframes hspin { to{transform:rotate(360deg)} }
+  @keyframes hglow {
+    from{filter:drop-shadow(0 0 12px var(--neon)) drop-shadow(0 0 32px rgba(77,166,255,.45))}
+    to  {filter:drop-shadow(0 0 26px var(--neon2)) drop-shadow(0 0 65px rgba(0,212,255,.6))}
+  }
+  .holo-tree::after { content:''; position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(0deg,transparent,transparent 4px,rgba(77,166,255,.06) 5px); animation:smove 2s linear infinite; }
+  .holo-ring { position:absolute; border-radius:50%; border:1px solid rgba(77,166,255,.35); animation:rpulse 3s ease-out infinite; }
+  .holo-ring:nth-child(1){ width:130%; height:35%; bottom:-14%; left:-15%; }
+  .holo-ring:nth-child(2){ width:108%; height:28%; bottom:-10%; left:-4%; animation-delay:.6s; opacity:.6; }
+  .holo-ring:nth-child(3){ width:85%;  height:22%; bottom:-6%;  left:7%;  animation-delay:1.3s; opacity:.3; }
+  @keyframes rpulse { 0%,100%{opacity:.5;transform:scaleX(1)} 50%{opacity:1;transform:scaleX(1.07)} }
+
+  /* partículas que se desprendem do logo */
+  .tree-particles { position:absolute; inset:0; pointer-events:none; z-index:3; }
+  .tree-particle { position:absolute; left:50%; top:46%; width:6px; height:6px; border-radius:50%; background:var(--neon2); box-shadow:0 0 10px var(--neon2),0 0 4px #fff; opacity:0; animation:tpart var(--dur) ease-out infinite; animation-delay:var(--del); }
+  @keyframes tpart {
+    0%   { opacity:0; transform:translate(-50%,-50%) scale(.3); }
+    15%  { opacity:1; }
+    100% { opacity:0; transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(1.5); }
+  }
+
+  /* TEXTO ENORME — visível a 7 m / tela 14" (≈70% da tela) */
+  .p1-text { display:flex; flex-direction:column; gap:0; align-items:center; text-align:center; }
+  .p1-brand { font-family:'Bebas Neue',sans-serif; font-size:clamp(120px,18vw,420px); line-height:.82; letter-spacing:.04em; color:var(--neon); text-shadow:0 0 30px rgba(77,166,255,.9),0 0 90px rgba(77,166,255,.4); animation:tflicker 7s ease-in-out infinite; }
+  .p1-brand-sub { font-family:'Bebas Neue',sans-serif; font-size:clamp(46px,6.4vw,150px); line-height:.95; letter-spacing:.06em; color:rgba(77,166,255,.85); text-shadow:0 0 22px rgba(77,166,255,.55); margin-top:.4vh; }
+  @keyframes tflicker { 0%,93%,100%{opacity:1} 94%{opacity:.8} 96%{opacity:1} 98%{opacity:.85} }
+  .p1-sub  { font-size:clamp(16px,1.6vw,30px); letter-spacing:8px; text-transform:uppercase; color:rgba(200,220,245,.4); margin-top:1vh; }
+  .p1-ver  { font-size:clamp(13px,1.1vw,22px); letter-spacing:5px; text-transform:uppercase; color:rgba(77,166,255,.4); margin-top:.4vh; }
+
+  /* frase piscando, centralizada na parte inferior (sem botão) */
+  .tap-hint { position:absolute; bottom:4vh; left:0; right:0; z-index:4; text-align:center; animation:blk 1.6s ease-in-out infinite; }
+  .tap-hint span { font-size:clamp(24px,3.2vw,64px); letter-spacing:.2em; text-transform:uppercase; color:#fff; text-shadow:0 0 24px rgba(77,166,255,.9); font-family:'Bebas Neue',sans-serif; }
+
+  /* ══════════════════════════════════════════
+     PAGE 2 — PIN (6 dígitos)
+  ══════════════════════════════════════════ */
+  #page2 { background:var(--deep); }
+  #page2::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 79px,rgba(77,166,255,.04) 80px),repeating-linear-gradient(90deg,transparent,transparent 79px,rgba(77,166,255,.04) 80px); animation:gdrift 10s linear infinite; }
+  #page2::after  { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 40%,rgba(77,166,255,.08) 0%,transparent 60%); pointer-events:none; }
+
+  .p2-left { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:60px; border-right:1px solid rgba(77,166,255,.12); position:relative; z-index:1; }
+  .p2-right { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px; position:relative; z-index:1; }
+
+  .brand-name { font-family:'Bebas Neue',sans-serif; font-size:clamp(90px,9vw,160px); letter-spacing:8px; line-height:.92; color:var(--neon); text-shadow:0 0 25px rgba(77,166,255,.65),0 0 70px rgba(77,166,255,.25); text-align:center; }
+  .brand-sub   { font-size:18px; letter-spacing:10px; text-transform:uppercase; color:rgba(200,220,245,.38); margin-top:6px; }
+  .brand-line  { width:75%; height:1px; background:linear-gradient(to right,transparent,var(--neon),transparent); margin-top:18px; }
+  .brand-access{ font-size:15px; letter-spacing:5px; text-transform:uppercase; color:rgba(77,166,255,.35); margin-top:10px; }
+
+  .pin-label { font-size:22px; letter-spacing:6px; text-transform:uppercase; color:rgba(200,220,245,.35); margin-bottom:28px; }
+  .pin-dots  { display:flex; gap:22px; margin-bottom:44px; }
+  .dot { width:26px; height:26px; border-radius:50%; border:2px solid var(--bright); transition:all .2s ease; background:transparent; }
+  .dot.filled { background:var(--neon); border-color:var(--neon); box-shadow:0 0 18px var(--neon); }
+  .dot.error  { border-color:var(--red); background:var(--red); box-shadow:0 0 18px var(--red); animation:shake .4s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-9px)} 75%{transform:translateX(9px)} }
+
+  .keypad { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; width:440px; }
+  .key { aspect-ratio:1; background:rgba(255,255,255,.03); border:1px solid rgba(77,166,255,.2); border-radius:18px; font-family:'Bebas Neue',sans-serif; font-size:56px; color:var(--neon); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .1s ease; position:relative; overflow:hidden; backdrop-filter:blur(6px); letter-spacing:2px; }
+  .key:active,.key.pressed { background:rgba(77,166,255,.15); border-color:var(--neon); box-shadow:0 0 28px rgba(77,166,255,.45); transform:scale(.93); }
+  .key.del   { font-size:32px; color:rgba(200,220,245,.5); letter-spacing:0; }
+  .key.empty { pointer-events:none; opacity:0; }
+  .key-ripple { position:absolute; border-radius:50%; width:12px; height:12px; background:rgba(77,166,255,.5); transform:scale(0); animation:krip .45s ease-out forwards; pointer-events:none; }
+  @keyframes krip { to{transform:scale(16);opacity:0} }
+
+  /* ══════════════════════════════════════════
+     PAGE 3 — MENU
+  ══════════════════════════════════════════ */
+  #page3 { background:var(--deep); }
+  #page3::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 0%,rgba(77,166,255,.08) 0%,transparent 55%); pointer-events:none; z-index:0; }
+
+  .p3-left  { flex:1.05; display:flex; flex-direction:column; padding:36px 40px 36px 50px; overflow:hidden; position:relative; z-index:1; border-right:1px solid rgba(77,166,255,.1); }
+  .p3-right { flex:.95;  display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px 34px; position:relative; z-index:1; }
+
+  .menu-header  { margin-bottom:18px; }
+  .menu-access  { font-size:20px; letter-spacing:5px; color:rgba(77,166,255,.55); margin-bottom:6px; }
+  .menu-title   { font-family:'Bebas Neue',sans-serif; font-size:clamp(80px,9vw,170px); letter-spacing:8px; color:var(--neon); text-shadow:0 0 24px rgba(77,166,255,.5); line-height:.92; }
+  .menu-brandsub{ font-family:'Bebas Neue',sans-serif; font-size:clamp(30px,3.4vw,64px); letter-spacing:6px; color:rgba(77,166,255,.7); line-height:1; margin-top:2px; text-shadow:0 0 16px rgba(77,166,255,.4); }
+  .menu-status  { font-size:18px; letter-spacing:7px; color:rgba(200,220,245,.3); margin-top:5px; }
+  .menu-divider { width:100%; height:1px; background:linear-gradient(to right,transparent,rgba(77,166,255,.4),transparent); margin:14px 0 18px; }
+
+  .menu-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; flex:1; }
+  .menu-card { background:rgba(255,255,255,.028); border:1px solid rgba(77,166,255,.14); border-radius:22px; padding:22px 18px; cursor:pointer; transition:all .3s ease; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; text-align:center; position:relative; overflow:hidden; }
+  .menu-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(77,166,255,.08),transparent 60%); opacity:0; transition:opacity .3s; }
+  .menu-card.selected { border-color:var(--neon); box-shadow:0 0 35px rgba(77,166,255,.4),inset 0 0 25px rgba(77,166,255,.08); background:rgba(77,166,255,.09); }
+  .menu-card.selected::before { opacity:1; }
+  .menu-card:active { transform:scale(.97); }
+
+  /* warning card style (bio-03) */
+  .menu-card.warn-card.selected { border-color:var(--amber); box-shadow:0 0 35px rgba(255,183,0,.4),inset 0 0 25px rgba(255,183,0,.08); background:rgba(255,183,0,.07); }
+  .menu-card.warn-card .card-tag { color:rgba(255,183,0,.5); }
+
+  .card-icon  { font-size:clamp(46px,5vw,84px); filter:drop-shadow(0 0 10px rgba(77,166,255,.55)); transition:transform .3s; flex-shrink:0; }
+  .menu-card.selected .card-icon { transform:scale(1.15); filter:drop-shadow(0 0 18px var(--neon)); }
+  .menu-card.warn-card.selected .card-icon { filter:drop-shadow(0 0 18px var(--amber)); }
+
+  .card-title { font-family:'Bebas Neue',sans-serif; font-weight:400; font-size:clamp(36px,4.6vw,70px); letter-spacing:2px; text-transform:uppercase; color:var(--text); line-height:1.02; flex:1; display:flex; align-items:center; justify-content:center; }
+  .menu-card.selected .card-title { color:var(--neon); }
+  .menu-card.warn-card.selected .card-title { color:var(--amber); }
+
+  .card-tag   { font-size:16px; letter-spacing:3px; color:rgba(77,166,255,.45); text-transform:uppercase; flex-shrink:0; }
+  .card-check { position:absolute; top:12px; right:14px; font-size:24px; color:var(--neon); opacity:0; transition:opacity .3s; }
+  .menu-card.warn-card .card-check { color:var(--amber); }
+  .menu-card.selected .card-check { opacity:1; }
+
+  /* MANDACHUVA — grande e bem visível */
+  .mandachuva-wrap { margin-top:20px; }
+  .mandachuva-btn { width:100%; padding:34px 30px; background:linear-gradient(135deg,var(--mid),var(--bright)); border:3px solid var(--neon); border-radius:24px; font-family:'Bebas Neue',sans-serif; font-size:clamp(64px,8vw,128px); letter-spacing:10px; color:#fff; cursor:pointer; position:relative; overflow:hidden; transition:all .2s ease; box-shadow:0 0 50px rgba(77,166,255,.45),inset 0 1px 0 rgba(255,255,255,.12); text-shadow:0 0 18px rgba(77,166,255,.7); display:flex; flex-direction:column; align-items:center; line-height:.9; }
+  .mandachuva-btn::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.1),transparent); }
+  .mandachuva-btn::after  { content:''; position:absolute; top:-50%; left:-60%; width:38%; height:200%; background:rgba(255,255,255,.14); transform:skewX(-20deg); transition:left .6s ease; }
+  .mandachuva-btn:active::after,.mandachuva-btn.pulse::after { left:130%; }
+  .mandachuva-btn:active { transform:scale(.98); box-shadow:0 0 70px rgba(77,166,255,.7); }
+  .mandachuva-sub { font-family:'Rajdhani',sans-serif; font-size:clamp(18px,1.8vw,28px); letter-spacing:8px; color:rgba(255,255,255,.6); margin-top:6px; }
+
+  /* hotspot escondido — Relatório de Desidratação */
+  .report-hotspot { position:absolute; top:24px; right:26px; width:54px; height:54px; z-index:5; border-radius:50%; cursor:pointer; opacity:.08; display:flex; align-items:center; justify-content:center; font-size:26px; transition:opacity .25s; }
+  .report-hotspot:active { opacity:.5; }
+
+  /* ══════════════════════════════════════════
+     HOLO PANEL (page 3, lado direito) — MAIOR
+  ══════════════════════════════════════════ */
+  .holo-panel { width:100%; height:100%; border:1px solid rgba(77,166,255,.18); border-radius:24px; background:rgba(4,12,28,.92); position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:border-color .4s,box-shadow .4s; opacity:1; }
+  .holo-panel.active { border-color:rgba(77,166,255,.6); box-shadow:0 0 50px rgba(77,166,255,.28),inset 0 0 50px rgba(77,166,255,.06); }
+  .holo-panel::after { content:''; position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(77,166,255,.035) 4px); animation:smove 2s linear infinite; pointer-events:none; z-index:1; }
+
+  .hc { position:absolute; width:24px; height:24px; pointer-events:none; z-index:3; }
+  .hc-tl { top:0;    left:0;  border-top:2px solid var(--neon); border-left:2px solid var(--neon);  border-radius:24px 0 0 0; }
+  .hc-tr { top:0;    right:0; border-top:2px solid var(--neon); border-right:2px solid var(--neon); border-radius:0 24px 0 0; }
+  .hc-bl { bottom:0; left:0;  border-bottom:2px solid var(--neon); border-left:2px solid var(--neon);  border-radius:0 0 0 24px; }
+  .hc-br { bottom:0; right:0; border-bottom:2px solid var(--neon); border-right:2px solid var(--neon); border-radius:0 0 24px 0; }
+
+  .holo-beam { position:absolute; left:0; right:0; height:2px; background:linear-gradient(to right,transparent,rgba(77,166,255,.8),transparent); animation:bscan 3s ease-in-out infinite; z-index:2; pointer-events:none; }
+  @keyframes bscan { 0%,100%{top:6%} 50%{top:92%} }
+
+  /* ── MINIPROPAGANDA (10s em looping, quando nada selecionado) ── */
+  .holo-ad { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; z-index:2; padding:36px; text-align:center; transition:opacity .4s; }
+  .holo-panel.active .holo-ad { opacity:0; pointer-events:none; }
+  .ad-scene { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:40px; opacity:0; animation:adfade 10s ease-in-out infinite; }
+  .ad-scene:nth-child(1){ animation-delay:0s; }
+  .ad-scene:nth-child(2){ animation-delay:-2.5s; }
+  .ad-scene:nth-child(3){ animation-delay:-5s; }
+  .ad-scene:nth-child(4){ animation-delay:-7.5s; }
+  @keyframes adfade {
+    0%,1%   { opacity:0; transform:scale(.95); }
+    4%,21%  { opacity:1; transform:scale(1); }
+    25%,100%{ opacity:0; transform:scale(1.05); }
+  }
+  .ad-year  { font-family:'Bebas Neue',sans-serif; font-size:clamp(90px,11vw,200px); color:var(--neon2); line-height:.9; text-shadow:0 0 30px rgba(0,212,255,.7); letter-spacing:6px; }
+  .ad-big   { font-family:'Bebas Neue',sans-serif; font-size:clamp(54px,6.5vw,120px); color:var(--neon); line-height:.92; letter-spacing:4px; text-shadow:0 0 24px rgba(77,166,255,.6); }
+  .ad-emoji { font-size:clamp(80px,10vw,180px); filter:drop-shadow(0 0 22px rgba(77,166,255,.6)); }
+  .ad-txt   { font-size:clamp(22px,2.6vw,46px); letter-spacing:3px; color:rgba(200,220,245,.75); text-transform:uppercase; line-height:1.2; max-width:90%; }
+  .ad-tag   { font-size:clamp(16px,1.6vw,28px); letter-spacing:8px; color:rgba(0,212,255,.55); text-transform:uppercase; }
+
+  .holo-content { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; z-index:2; padding:34px; opacity:0; transition:opacity .5s .15s; pointer-events:none; }
+  .holo-panel.active .holo-content { opacity:1; }
+
+  .holo-anim { width:clamp(240px,26vw,460px); height:clamp(240px,26vw,460px); flex-shrink:0; filter:drop-shadow(0 0 16px rgba(77,166,255,.7)); }
+  .holo-anim svg { width:100%; height:100%; }
+
+  .holo-info-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(48px,5.5vw,96px); letter-spacing:5px; color:var(--neon); text-shadow:0 0 18px rgba(77,166,255,.7); text-align:center; line-height:.95; }
+  .holo-info-desc  { font-size:clamp(18px,1.8vw,30px); letter-spacing:3px; color:rgba(200,220,245,.45); text-transform:uppercase; margin-top:8px; text-align:center; }
+
+  .holo-status { display:flex; align-items:center; gap:12px; margin-top:16px; justify-content:center; }
+  .holo-dot     { width:12px; height:12px; border-radius:50%; background:var(--neon); box-shadow:0 0 10px var(--neon); animation:blk 1.2s ease-in-out infinite; }
+  .holo-status-txt { font-size:clamp(15px,1.5vw,24px); letter-spacing:4px; color:rgba(77,166,255,.6); text-transform:uppercase; }
+
+  .holo-bar-wrap { width:78%; height:6px; background:rgba(77,166,255,.1); border-radius:3px; margin-top:18px; overflow:hidden; }
+  .holo-bar { height:100%; background:linear-gradient(to right,var(--neon2),var(--neon)); border-radius:3px; animation:bar-anim 2.5s ease-in-out infinite; box-shadow:0 0 8px var(--neon); }
+  @keyframes bar-anim { 0%,100%{width:35%} 50%{width:85%} }
+
+  /* ══════════════════════════════════════════
+     MODAIS
+  ══════════════════════════════════════════ */
+  .modal-overlay { position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; background:rgba(3,8,16,.82); backdrop-filter:blur(8px); opacity:0; pointer-events:none; transition:opacity .35s ease; }
+  .modal-overlay.show { opacity:1; pointer-events:all; }
+
+  .modal-box { width:min(640px,88vw); background:rgba(6,14,28,.95); border:2px solid rgba(255,183,0,.55); border-radius:24px; padding:48px 52px; position:relative; display:flex; flex-direction:column; align-items:center; gap:20px; box-shadow:0 0 60px rgba(255,183,0,.25),inset 0 0 40px rgba(255,183,0,.05); }
+
+  .modal-box::before,.modal-box::after { content:''; position:absolute; width:22px; height:22px; }
+  .modal-box::before { top:0; left:0; border-top:2px solid var(--amber); border-left:2px solid var(--amber); border-radius:22px 0 0 0; }
+  .modal-box::after  { bottom:0; right:0; border-bottom:2px solid var(--amber); border-right:2px solid var(--amber); border-radius:0 0 24px 0; }
+
+  .modal-icon { font-size:72px; animation:blk 1.4s ease-in-out infinite; }
+  .modal-title { font-family:'Bebas Neue',sans-serif; font-size:56px; letter-spacing:6px; color:var(--amber); text-shadow:0 0 18px rgba(255,183,0,.6); text-align:center; }
+  .modal-body  { font-size:22px; letter-spacing:2px; color:rgba(200,220,245,.6); text-align:center; line-height:1.6; max-width:480px; }
+  .modal-tag   { font-size:15px; letter-spacing:4px; color:rgba(255,183,0,.4); text-transform:uppercase; }
+
+  .modal-btns  { display:flex; gap:16px; margin-top:10px; width:100%; }
+  .modal-btn   { flex:1; padding:22px; border-radius:14px; font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:4px; cursor:pointer; border:2px solid; transition:all .2s ease; }
+  .modal-btn.cancel { background:rgba(255,255,255,.04); border-color:rgba(77,166,255,.25); color:rgba(200,220,245,.5); }
+  .modal-btn.cancel:active { background:rgba(77,166,255,.1); }
+  .modal-btn.confirm { background:rgba(255,183,0,.12); border-color:var(--amber); color:var(--amber); box-shadow:0 0 20px rgba(255,183,0,.2); }
+  .modal-btn.confirm:active { background:rgba(255,183,0,.22); box-shadow:0 0 35px rgba(255,183,0,.4); }
+
+  /* ── REPORT MODAL (Minalbo) ── */
+  .report-box { width:min(680px,90vw); max-height:88vh; overflow-y:auto; background:rgba(5,13,26,.97); border:2px solid rgba(77,166,255,.5); border-radius:24px; padding:42px 46px; position:relative; display:flex; flex-direction:column; gap:18px; box-shadow:0 0 60px rgba(77,166,255,.28),inset 0 0 40px rgba(77,166,255,.05); }
+  .report-box::before,.report-box::after { content:''; position:absolute; width:22px; height:22px; }
+  .report-box::before { top:0; left:0; border-top:2px solid var(--neon); border-left:2px solid var(--neon); border-radius:22px 0 0 0; }
+  .report-box::after  { bottom:0; right:0; border-bottom:2px solid var(--neon); border-right:2px solid var(--neon); border-radius:0 0 24px 0; }
+  .report-head { display:flex; align-items:center; gap:16px; }
+  .report-head .ricon { font-size:46px; filter:drop-shadow(0 0 12px rgba(77,166,255,.6)); }
+  .report-title { font-family:'Bebas Neue',sans-serif; font-size:46px; letter-spacing:4px; color:var(--neon); text-shadow:0 0 16px rgba(77,166,255,.55); line-height:.95; }
+  .report-subj  { font-size:16px; letter-spacing:4px; color:rgba(0,212,255,.6); text-transform:uppercase; margin-top:2px; }
+  .report-line  { width:100%; height:1px; background:linear-gradient(to right,transparent,rgba(77,166,255,.4),transparent); }
+  .report-row { display:flex; justify-content:space-between; gap:18px; font-size:20px; letter-spacing:1px; padding:6px 0; border-bottom:1px dashed rgba(77,166,255,.12); }
+  .report-row .rk { color:rgba(200,220,245,.45); text-transform:uppercase; letter-spacing:3px; font-size:16px; }
+  .report-row .rv { color:var(--text); font-weight:600; text-align:right; }
+  .report-row .rv.crit { color:var(--amber); }
+  .report-note { font-size:16px; letter-spacing:1px; color:rgba(200,220,245,.5); line-height:1.6; background:rgba(77,166,255,.05); border-left:3px solid var(--neon); padding:14px 18px; border-radius:0 10px 10px 0; }
+  .report-close { margin-top:8px; padding:20px; border-radius:14px; font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:4px; cursor:pointer; border:2px solid var(--neon); background:rgba(77,166,255,.12); color:var(--neon); }
+  .report-close:active { background:rgba(77,166,255,.24); }
+
+  /* ══════════════════════════════════════════
+     PAGE 4 — CARREGANDO CHUVA (maior, sem contagem)
+  ══════════════════════════════════════════ */
+  #page4 { background:var(--deep); flex-direction:column; align-items:center; justify-content:center; gap:0; }
+  #page4::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%,rgba(0,212,255,.07) 0%,transparent 65%); pointer-events:none; }
+
+  .rain-wrap { display:flex; flex-direction:column; align-items:center; gap:5vh; position:relative; z-index:2; width:100%; padding:0 4vw; }
+
+  /* holographic rain logo — maior */
+  .holo-rain { width:clamp(320px,32vw,560px); height:clamp(320px,32vw,560px); position:relative; animation:hfloat 4s ease-in-out infinite; }
+  .holo-rain svg { width:100%; height:100%; animation:hglow 3s ease-in-out infinite alternate; }
+  .holo-rain::after { content:''; position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(0deg,transparent,transparent 4px,rgba(77,166,255,.06) 5px); animation:smove 2s linear infinite; }
+  .holo-rain-ring { position:absolute; border-radius:50%; border:1px solid rgba(0,212,255,.3); animation:rpulse 3s ease-out infinite; }
+  .holo-rain-ring:nth-child(1){ width:130%; height:35%; bottom:-14%; left:-15%; }
+  .holo-rain-ring:nth-child(2){ width:108%; height:28%; bottom:-10%; left:-4%; animation-delay:.6s; opacity:.6; }
+  .holo-rain-ring:nth-child(3){ width:85%; height:22%; bottom:-6%; left:7%; animation-delay:1.3s; opacity:.3; }
+
+  .rain-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(110px,13vw,260px); letter-spacing:10px; color:var(--neon2); text-shadow:0 0 30px rgba(0,212,255,.8),0 0 90px rgba(0,212,255,.35); text-align:center; line-height:.86; animation:tflicker 5s ease-in-out infinite; }
+  .rain-subtitle { font-size:clamp(24px,2.8vw,52px); letter-spacing:8px; text-transform:uppercase; color:rgba(200,220,245,.45); margin-top:-1vh; text-align:center; }
+
+  /* só a barra de carregamento (sem contagem de segundos) */
+  .rain-progress-wrap { width:min(640px,80vw); display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .rain-bar-outer { width:100%; height:12px; background:rgba(0,212,255,.1); border-radius:6px; overflow:hidden; }
+  .rain-bar-inner { height:100%; width:0%; background:linear-gradient(to right,var(--neon2),var(--neon)); border-radius:6px; box-shadow:0 0 14px var(--neon2); transition:width 1s linear; }
+
+  /* falling rain particles */
+  .rain-particles { position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:1; }
+  .rain-drop { position:absolute; width:2px; background:linear-gradient(to bottom,transparent,rgba(0,212,255,.6)); border-radius:1px; animation:fall linear infinite; }
+  @keyframes fall { 0%{transform:translateY(-40px);opacity:.6} 100%{transform:translateY(110vh);opacity:.1} }
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+
+<!-- ══ PAGE 1 — INTRO ══ -->
+<div id="page1" class="page active">
+  <div class="grid-bg"></div>
+  <video id="bg-video" autoplay muted loop playsinline></video>
+  <div class="video-overlay"></div>
+
+  <div class="p1-inner">
+    <!-- BAOBAB holographic tree -->
+    <div class="holo-tree">
+      <svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="tg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stop-color="#00d4ff" stop-opacity=".95"/>
+            <stop offset="50%"  stop-color="#4da6ff" stop-opacity=".82"/>
+            <stop offset="100%" stop-color="#1e90ff" stop-opacity=".6"/>
+          </linearGradient>
+          <filter id="gf">
+            <feGaussianBlur stdDeviation="3" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- thick rounded trunk (baobab) -->
+        <path d="M85,210 Q70,180 68,155 Q65,130 80,120 Q100,112 120,120 Q135,130 132,155 Q130,180 115,210 Z"
+              fill="url(#tg)" opacity=".55" filter="url(#gf)"/>
+        <path d="M85,210 Q70,180 68,155 Q65,130 80,120 Q100,112 120,120 Q135,130 132,155 Q130,180 115,210 Z"
+              fill="none" stroke="#4da6ff" stroke-width="1.2" opacity=".7"/>
+        <!-- baobab belly bulge -->
+        <ellipse cx="100" cy="150" rx="36" ry="28" fill="url(#tg)" opacity=".25" filter="url(#gf)"/>
+        <ellipse cx="100" cy="150" rx="36" ry="28" fill="none" stroke="#4da6ff" stroke-width="1" opacity=".5"/>
+        <!-- roots spread -->
+        <path d="M85,210 Q75,215 60,218 Q70,205 80,200" fill="url(#tg)" opacity=".4"/>
+        <path d="M115,210 Q125,215 140,218 Q130,205 120,200" fill="url(#tg)" opacity=".4"/>
+        <path d="M92,212 Q88,220 78,225 Q84,212 90,208" fill="url(#tg)" opacity=".35"/>
+        <path d="M108,212 Q112,220 122,225 Q116,212 110,208" fill="url(#tg)" opacity=".35"/>
+        <!-- scan lines on trunk -->
+        <line x1="72" y1="135" x2="128" y2="135" stroke="#4da6ff" stroke-width=".6" opacity=".22"/>
+        <line x1="70" y1="148" x2="130" y2="148" stroke="#4da6ff" stroke-width=".6" opacity=".18"/>
+        <line x1="72" y1="162" x2="128" y2="162" stroke="#4da6ff" stroke-width=".6" opacity=".15"/>
+        <!-- crown — big rounded blob (baobab style) -->
+        <ellipse cx="100" cy="88" rx="68" ry="52" fill="url(#tg)" opacity=".3" filter="url(#gf)"/>
+        <ellipse cx="100" cy="88" rx="68" ry="52" fill="none" stroke="#00d4ff" stroke-width="1.2" opacity=".55"/>
+        <!-- inner crown layers -->
+        <ellipse cx="100" cy="82" rx="54" ry="42" fill="url(#tg)" opacity=".22"/>
+        <ellipse cx="100" cy="78" rx="38" ry="30" fill="url(#tg)" opacity=".3" filter="url(#gf)"/>
+        <ellipse cx="100" cy="78" rx="38" ry="30" fill="none" stroke="#00d4ff" stroke-width="1" opacity=".45"/>
+        <!-- crown lobe bumps -->
+        <ellipse cx="60"  cy="92" rx="22" ry="18" fill="url(#tg)" opacity=".25"/>
+        <ellipse cx="60"  cy="92" rx="22" ry="18" fill="none" stroke="#4da6ff" stroke-width="1" opacity=".4"/>
+        <ellipse cx="140" cy="92" rx="22" ry="18" fill="url(#tg)" opacity=".25"/>
+        <ellipse cx="140" cy="92" rx="22" ry="18" fill="none" stroke="#4da6ff" stroke-width="1" opacity=".4"/>
+        <ellipse cx="78"  cy="55" rx="20" ry="16" fill="url(#tg)" opacity=".3"/>
+        <ellipse cx="78"  cy="55" rx="20" ry="16" fill="none" stroke="#00d4ff" stroke-width="1" opacity=".45"/>
+        <ellipse cx="122" cy="55" rx="20" ry="16" fill="url(#tg)" opacity=".3"/>
+        <ellipse cx="122" cy="55" rx="20" ry="16" fill="none" stroke="#00d4ff" stroke-width="1" opacity=".45"/>
+        <ellipse cx="100" cy="38" rx="18" ry="14" fill="url(#tg)" opacity=".35" filter="url(#gf)"/>
+        <ellipse cx="100" cy="38" rx="18" ry="14" fill="none" stroke="#00d4ff" stroke-width="1.2" opacity=".6"/>
+        <!-- center spine -->
+        <line x1="100" y1="120" x2="100" y2="38" stroke="#00d4ff" stroke-width=".8" stroke-dasharray="5,4" opacity=".35"/>
+        <!-- wireframe crown cross-lines -->
+        <line x1="32"  y1="88"  x2="168" y2="88"  stroke="#4da6ff" stroke-width=".5" opacity=".2"/>
+        <line x1="42"  y1="72"  x2="158" y2="72"  stroke="#4da6ff" stroke-width=".5" opacity=".18"/>
+        <line x1="55"  y1="58"  x2="145" y2="58"  stroke="#00d4ff" stroke-width=".5" opacity=".22"/>
+        <!-- glow dots -->
+        <circle cx="100" cy="38"  r="4"   fill="#00d4ff" opacity=".95" filter="url(#gf)"/>
+        <circle cx="60"  cy="92"  r="2.5" fill="#4da6ff" opacity=".8"/>
+        <circle cx="140" cy="92"  r="2.5" fill="#4da6ff" opacity=".8"/>
+        <circle cx="78"  cy="55"  r="2.5" fill="#00d4ff" opacity=".7"/>
+        <circle cx="122" cy="55"  r="2.5" fill="#00d4ff" opacity=".7"/>
+        <circle cx="100" cy="120" r="3"   fill="#4da6ff" opacity=".6"/>
+      </svg>
+      <div class="holo-ring"></div>
+      <div class="holo-ring"></div>
+      <div class="holo-ring"></div>
+      <div class="tree-particles" id="treeParticles"></div>
+    </div>
+
+    <div class="p1-text">
+      <div class="p1-brand">LUZIA</div>
+      <div class="p1-brand-sub">FOREST COMPANY</div>
+      <div class="p1-sub">Sistema Operacional</div>
+      <div class="p1-ver">● versão 4.1 · acesso restrito</div>
+    </div>
+  </div>
+
+  <div class="tap-hint">
+    <span>Toque para entrar</span>
+  </div>
+</div>
+
+<!-- ══ PAGE 2 — PIN (6 dígitos) ══ -->
+<div id="page2" class="page">
+  <div class="p2-left">
+    <div class="brand-name">LUZIA</div>
+    <div class="brand-sub" style="font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:8px;color:rgba(77,166,255,.55);">FOREST COMPANY</div>
+    <div class="brand-sub">Sistema de Acesso</div>
+    <div class="brand-line"></div>
+    <div class="brand-access">● Identificação Necessária</div>
+  </div>
+  <div class="p2-right">
+    <div class="pin-label">Digite sua senha</div>
+    <div class="pin-dots">
+      <div class="dot" id="d0"></div><div class="dot" id="d1"></div>
+      <div class="dot" id="d2"></div><div class="dot" id="d3"></div>
+      <div class="dot" id="d4"></div><div class="dot" id="d5"></div>
+    </div>
+    <div class="keypad" id="keypad">
+      <div class="key" data-n="1">1</div><div class="key" data-n="2">2</div><div class="key" data-n="3">3</div>
+      <div class="key" data-n="4">4</div><div class="key" data-n="5">5</div><div class="key" data-n="6">6</div>
+      <div class="key" data-n="7">7</div><div class="key" data-n="8">8</div><div class="key" data-n="9">9</div>
+      <div class="key empty"></div><div class="key" data-n="0">0</div><div class="key del" data-n="del">⌫</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 3 — MENU ══ -->
+<div id="page3" class="page">
+  <!-- hotspot escondido: Relatório de Desidratação -->
+  <div class="report-hotspot" onclick="openReport()" title="">📊</div>
+
+  <div class="p3-left">
+    <div class="menu-header">
+      <div class="menu-access">● ACESSO AUTORIZADO</div>
+      <div class="menu-title">LUZIA</div>
+      <div class="menu-brandsub">FOREST COMPANY</div>
+      <div class="menu-status">PAINEL DE OPERAÇÕES</div>
+      <div class="menu-divider"></div>
+    </div>
+    <div class="menu-grid">
+      <div class="menu-card" data-id="0" onclick="selectCard(this)">
+        <div class="card-check">✦</div>
+        <div class="card-icon">🌿</div>
+        <div class="card-title">Desidratação de<br>Matéria Orgânica</div>
+        <div class="card-tag">MOD-01</div>
+      </div>
+      <div class="menu-card warn-card" data-id="1" onclick="selectCard(this)">
+        <div class="card-check">⚠</div>
+        <div class="card-icon">💧</div>
+        <div class="card-title">Desidratação<br>Humana</div>
+        <div class="card-tag">BIO-03</div>
+      </div>
+    </div>
+    <div class="mandachuva-wrap">
+      <button class="mandachuva-btn" onclick="mandachuvaPress(this)">
+        MANDACHUVA
+        <span class="mandachuva-sub">COMANDO CENTRAL</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="p3-right">
+    <div class="holo-panel" id="holoPanel">
+      <div class="hc hc-tl"></div><div class="hc hc-tr"></div>
+      <div class="hc hc-bl"></div><div class="hc hc-br"></div>
+      <div class="holo-beam"></div>
+
+      <!-- MINIPROPAGANDA (10s loop) — exibida quando nada está selecionado -->
+      <div class="holo-ad">
+        <div class="ad-scene">
+          <div class="ad-year">2070</div>
+          <div class="ad-txt">A água do mundo<br>secou.</div>
+        </div>
+        <div class="ad-scene">
+          <div class="ad-emoji">🌳</div>
+          <div class="ad-big">FOREST<br>COMPANY</div>
+        </div>
+        <div class="ad-scene">
+          <div class="ad-emoji">🌿➜💧</div>
+          <div class="ad-txt">Desidratamos<br>matéria orgânica.</div>
+        </div>
+        <div class="ad-scene">
+          <div class="ad-emoji">🌧️</div>
+          <div class="ad-txt">E devolvemos<br>a chuva ao planeta.</div>
+          <div class="ad-tag">FOREST COMPANY · 2070</div>
+        </div>
+      </div>
+
+      <div class="holo-content">
+        <div class="holo-anim" id="holoAnim"></div>
+        <div>
+          <div class="holo-info-title" id="holoTitle"></div>
+          <div class="holo-info-desc"  id="holoDesc"></div>
+          <div class="holo-status">
+            <div class="holo-dot"></div>
+            <div class="holo-status-txt">SISTEMA ATIVO · PROCESSANDO</div>
+          </div>
+          <div class="holo-bar-wrap"><div class="holo-bar"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 4 — CARREGANDO CHUVA ══ -->
+<div id="page4" class="page">
+  <div class="grid-bg"></div>
+  <div class="rain-particles" id="rainParticles"></div>
+
+  <div class="rain-wrap">
+    <!-- holographic rain cloud SVG -->
+    <div class="holo-rain">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stop-color="#00d4ff" stop-opacity=".95"/>
+            <stop offset="50%"  stop-color="#4da6ff" stop-opacity=".85"/>
+            <stop offset="100%" stop-color="#1e90ff" stop-opacity=".6"/>
+          </linearGradient>
+          <filter id="rgf">
+            <feGaussianBlur stdDeviation="3" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- cloud body -->
+        <ellipse cx="100" cy="78"  rx="62" ry="38" fill="url(#rg)" opacity=".3" filter="url(#rgf)"/>
+        <ellipse cx="100" cy="78"  rx="62" ry="38" fill="none" stroke="#00d4ff" stroke-width="1.2" opacity=".55"/>
+        <!-- cloud lobes -->
+        <ellipse cx="68"  cy="70"  rx="28" ry="24" fill="url(#rg)" opacity=".28"/>
+        <ellipse cx="68"  cy="70"  rx="28" ry="24" fill="none" stroke="#4da6ff" stroke-width="1" opacity=".45"/>
+        <ellipse cx="132" cy="70"  rx="28" ry="24" fill="url(#rg)" opacity=".28"/>
+        <ellipse cx="132" cy="70"  rx="28" ry="24" fill="none" stroke="#4da6ff" stroke-width="1" opacity=".45"/>
+        <ellipse cx="100" cy="55"  rx="24" ry="20" fill="url(#rg)" opacity=".35" filter="url(#rgf)"/>
+        <ellipse cx="100" cy="55"  rx="24" ry="20" fill="none" stroke="#00d4ff" stroke-width="1.2" opacity=".6"/>
+        <!-- scanlines on cloud -->
+        <line x1="42" y1="74" x2="158" y2="74" stroke="#4da6ff" stroke-width=".5" opacity=".2"/>
+        <line x1="50" y1="86" x2="150" y2="86" stroke="#4da6ff" stroke-width=".5" opacity=".18"/>
+        <!-- glow dot top -->
+        <circle cx="100" cy="40" r="4" fill="#00d4ff" opacity=".9" filter="url(#rgf)"/>
+        <!-- animated rain drops -->
+        <line x1="72"  y1="118" x2="65"  y2="145" stroke="url(#rg)" stroke-width="2"   opacity=".8" stroke-linecap="round" style="animation:rdrop 1.4s ease-in infinite"/>
+        <line x1="90"  y1="118" x2="83"  y2="148" stroke="url(#rg)" stroke-width="2"   opacity=".75" stroke-linecap="round" style="animation:rdrop 1.4s ease-in infinite .25s"/>
+        <line x1="108" y1="118" x2="101" y2="148" stroke="url(#rg)" stroke-width="2"   opacity=".7" stroke-linecap="round" style="animation:rdrop 1.4s ease-in infinite .5s"/>
+        <line x1="126" y1="118" x2="119" y2="148" stroke="url(#rg)" stroke-width="2"   opacity=".75" stroke-linecap="round" style="animation:rdrop 1.4s ease-in infinite .75s"/>
+        <line x1="81"  y1="130" x2="74"  y2="162" stroke="url(#rg)" stroke-width="1.5" opacity=".6"  stroke-linecap="round" style="animation:rdrop 1.4s ease-in infinite .15s"/>
+        <line x1="119" y1="130" x2="112" y2="162" stroke="url(#rg)" stroke-width="1.5" opacity=".6"  stroke-linecap="round" style="animation:rdrop 1.4s ease-in infinite .9s"/>
+        <!-- bottom splash dots -->
+        <circle cx="65"  cy="148" r="3" fill="#00d4ff" opacity=".7" style="animation:splash 1.4s ease-in infinite"/>
+        <circle cx="83"  cy="152" r="3" fill="#4da6ff" opacity=".65" style="animation:splash 1.4s ease-in infinite .25s"/>
+        <circle cx="101" cy="152" r="3" fill="#00d4ff" opacity=".6" style="animation:splash 1.4s ease-in infinite .5s"/>
+        <circle cx="119" cy="148" r="3" fill="#4da6ff" opacity=".65" style="animation:splash 1.4s ease-in infinite .75s"/>
+        <!-- wireframe box -->
+        <rect x="36" y="110" width="128" height="70" rx="6" fill="none" stroke="#4da6ff" stroke-width=".6" stroke-dasharray="4,4" opacity=".2"/>
+        <style>
+          @keyframes rdrop  { 0%{transform:translateY(0);opacity:.8} 100%{transform:translateY(20px);opacity:0} }
+          @keyframes splash { 0%,60%{transform:scale(0);opacity:.8} 100%{transform:scale(2.2);opacity:0} }
+        </style>
+      </svg>
+      <div class="holo-rain-ring"></div>
+      <div class="holo-rain-ring"></div>
+      <div class="holo-rain-ring"></div>
+    </div>
+
+    <div class="rain-title">CARREGANDO<br>CHUVA</div>
+    <div class="rain-subtitle">Inicializando sistema de precipitação</div>
+
+    <div class="rain-progress-wrap">
+      <div class="rain-bar-outer">
+        <div class="rain-bar-inner" id="rainBar"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ WARNING MODAL ══ -->
+<div class="modal-overlay" id="warnModal">
+  <div class="modal-box">
+    <div class="modal-icon">⚠️</div>
+    <div class="modal-title">ATENÇÃO</div>
+    <div class="modal-body">
+      O módulo <strong style="color:var(--amber)">Desidratação Humana</strong> é um protocolo de nível crítico.<br>
+      Certifique-se de que possui autorização adequada antes de prosseguir.
+    </div>
+    <div class="modal-tag">BIO-03 · ACESSO RESTRITO</div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel"  onclick="closeWarning(false)">CANCELAR</button>
+      <button class="modal-btn confirm" onclick="closeWarning(true)">CONFIRMAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REPORT MODAL (Minalbo) ══ -->
+<div class="modal-overlay" id="reportModal">
+  <div class="report-box">
+    <div class="report-head">
+      <div class="ricon">📊</div>
+      <div>
+        <div class="report-title">RELATÓRIO DE DESIDRATAÇÃO</div>
+        <div class="report-subj">SUJEITO: MINALBO · REL-04</div>
+      </div>
+    </div>
+    <div class="report-line"></div>
+    <div class="report-row"><span class="rk">ID do Sujeito</span><span class="rv">MIN-2070-0xA9</span></div>
+    <div class="report-row"><span class="rk">Status</span><span class="rv crit">EM PROCESSAMENTO</span></div>
+    <div class="report-row"><span class="rk">Massa inicial</span><span class="rv">81,4 kg</span></div>
+    <div class="report-row"><span class="rk">Massa atual</span><span class="rv">52,7 kg</span></div>
+    <div class="report-row"><span class="rk">Água extraída</span><span class="rv">28,7 L</span></div>
+    <div class="report-row"><span class="rk">Taxa de hidratação</span><span class="rv crit">19%</span></div>
+    <div class="report-row"><span class="rk">Precipitação gerada</span><span class="rv">0,9 mm · setor 7</span></div>
+    <div class="report-row"><span class="rk">Ciclo</span><span class="rv">3 de 5</span></div>
+    <div class="report-note">
+      Sujeito <strong style="color:var(--neon2)">Minalbo</strong> apresenta resposta nominal ao protocolo MANDACHUVA.
+      Estimativa para conclusão do ciclo de desidratação: 14 h 22 min. Rendimento projetado: 41,2 L de água potável
+      reintroduzidos na atmosfera regional.
+    </div>
+    <button class="report-close" onclick="closeReport()">FECHAR RELATÓRIO</button>
+  </div>
+</div>
+
+<script>
+// ── Card data ─────────────────────────────────────────────────
+const cards = [
+  {
+    title:'MATÉRIA ORGÂNICA', desc:'MÓDULO DE DESIDRATAÇÃO · MOD-01',
+    svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="g0" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00d4ff" stop-opacity=".9"/><stop offset="100%" stop-color="#4da6ff" stop-opacity=".6"/></linearGradient><filter id="f0"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <g style="transform-origin:60px 60px;animation:sp0 6s linear infinite">
+        <circle cx="60" cy="20" r="6" fill="url(#g0)" filter="url(#f0)"/><circle cx="100" cy="60" r="6" fill="url(#g0)" filter="url(#f0)"/>
+        <circle cx="60" cy="100" r="6" fill="url(#g0)" filter="url(#f0)"/><circle cx="20" cy="60" r="6" fill="url(#g0)" filter="url(#f0)"/>
+        <line x1="60" y1="20" x2="100" y2="60" stroke="#4da6ff" stroke-width="1" opacity=".4"/><line x1="100" y1="60" x2="60" y2="100" stroke="#4da6ff" stroke-width="1" opacity=".4"/>
+        <line x1="60" y1="100" x2="20" y2="60" stroke="#4da6ff" stroke-width="1" opacity=".4"/><line x1="20" y1="60" x2="60" y2="20" stroke="#4da6ff" stroke-width="1" opacity=".4"/>
+      </g>
+      <ellipse cx="60" cy="55" rx="14" ry="22" fill="url(#g0)" opacity=".3" style="transform-origin:60px 55px;animation:lp0 2s ease-in-out infinite"/>
+      <ellipse cx="60" cy="55" rx="14" ry="22" fill="none" stroke="#00d4ff" stroke-width="1" opacity=".6" style="transform-origin:60px 55px;animation:lp0 2s ease-in-out infinite"/>
+      <circle cx="48" cy="90" r="3" fill="#00d4ff" opacity=".7" style="animation:dr0 2s ease-in-out infinite"/>
+      <circle cx="60" cy="85" r="3" fill="#4da6ff" opacity=".6" style="animation:dr0 2s ease-in-out infinite .5s"/>
+      <circle cx="72" cy="90" r="3" fill="#00d4ff" opacity=".7" style="animation:dr0 2s ease-in-out infinite 1s"/>
+      <style>@keyframes sp0{to{transform:rotate(360deg)}}@keyframes lp0{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes dr0{0%{transform:translateY(0);opacity:.7}100%{transform:translateY(-30px);opacity:0}}</style>
+    </svg>`
+  },
+  {
+    title:'DESIDRATAÇÃO HUMANA', desc:'MÓDULO BIOLÓGICO · BIO-03',
+    svg:`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00d4ff" stop-opacity=".9"/><stop offset="100%" stop-color="#4da6ff" stop-opacity=".5"/></linearGradient><filter id="f2"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <circle cx="60" cy="22" r="12" fill="url(#g2)" opacity=".35" filter="url(#f2)"/>
+      <circle cx="60" cy="22" r="12" fill="none" stroke="#4da6ff" stroke-width="1.2" opacity=".8"/>
+      <path d="M46,40 L74,40 L80,80 L68,80 L68,105 L52,105 L52,80 L40,80 Z" fill="url(#g2)" opacity=".2" filter="url(#f2)"/>
+      <path d="M46,40 L74,40 L80,80 L68,80 L68,105 L52,105 L52,80 L40,80 Z" fill="none" stroke="#4da6ff" stroke-width="1.2" opacity=".6"/>
+      <line x1="46" y1="44" x2="28" y2="68" stroke="#4da6ff" stroke-width="1.8" opacity=".7"/>
+      <line x1="74" y1="44" x2="92" y2="68" stroke="#4da6ff" stroke-width="1.8" opacity=".7"/>
+      <path d="M55,50 Q55,44 60,40 Q65,44 65,50 Q65,56 60,58 Q55,56 55,50 Z" fill="#00d4ff" opacity=".4" style="animation:wd2 2.5s ease-in-out infinite"/>
+      <path d="M55,50 Q55,44 60,40 Q65,44 65,50 Q65,56 60,58 Q55,56 55,50 Z" fill="none" stroke="#00d4ff" stroke-width="1" opacity=".7" style="animation:wd2 2.5s ease-in-out infinite"/>
+      <ellipse cx="60" cy="72" rx="30" ry="8" fill="none" stroke="#4da6ff" stroke-width="1" stroke-dasharray="4,4" opacity=".4" style="animation:sr2 3s linear infinite"/>
+      <style>@keyframes wd2{0%,100%{transform:translateY(0);opacity:.7}50%{transform:translateY(-8px);opacity:.3}}@keyframes sr2{from{stroke-dashoffset:0}to{stroke-dashoffset:60}}</style>
+    </svg>`
+  }
+];
+
+// ── Navigation ────────────────────────────────────────────────
+let pin = [];
+const PIN_LEN = 6;
+const CORRECT_PIN = '123456'; // ← senha de 6 dígitos · altere aqui
+
+function goTo(n) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page' + n).classList.add('active');
+}
+
+// page1 tap (loop até o toque)
+let tapped = false;
+document.getElementById('page1').addEventListener('touchend', function(e){
+  e.preventDefault(); if(tapped) return; tapped=true; goTo(2); setTimeout(()=>tapped=false,800);
+});
+document.getElementById('page1').addEventListener('click', ()=>goTo(2));
+
+// ── Keypad (6 dígitos) ─────────────────────────────────────────
+document.getElementById('keypad').addEventListener('click', handleKey);
+document.getElementById('keypad').addEventListener('touchend', function(e){
+  e.preventDefault(); const k=e.target.closest('.key'); if(k) handleKey({target:k});
+});
+
+function handleKey(e) {
+  const key=e.target.closest('.key'); if(!key) return;
+  const n=key.dataset.n;
+  const r=document.createElement('div'); r.className='key-ripple'; key.appendChild(r); setTimeout(()=>r.remove(),500);
+  key.classList.add('pressed'); setTimeout(()=>key.classList.remove('pressed'),150);
+  if(n==='del'){pin.pop();}else if(pin.length<PIN_LEN){pin.push(n);}
+  updateDots(); if(pin.length===PIN_LEN) setTimeout(checkPin,200);
+}
+function updateDots(){for(let i=0;i<PIN_LEN;i++) document.getElementById('d'+i).className='dot'+(i<pin.length?' filled':'');}
+function checkPin(){
+  if(pin.join('')===CORRECT_PIN){goTo(3);setTimeout(resetPin,1200);}
+  else{for(let i=0;i<PIN_LEN;i++)document.getElementById('d'+i).className='dot error';setTimeout(resetPin,750);}
+}
+function resetPin(){pin=[];updateDots();}
+
+// ── Card selection + Warning ───────────────────────────────────
+let currentCard=null;
+let pendingWarnCard=null;
+
+function selectCard(el){
+  const id=parseInt(el.dataset.id);
+  const panel=document.getElementById('holoPanel');
+  document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
+
+  if(currentCard===id){currentCard=null;panel.classList.remove('active');return;}
+
+  // BIO-03 warning (Desidratação Humana = id 1)
+  if(id===1){
+    pendingWarnCard=el;
+    document.getElementById('warnModal').classList.add('show');
+    return;
+  }
+
+  activateCard(el,id,panel);
+}
+
+function activateCard(el,id,panel){
+  currentCard=id;
+  el.classList.add('selected');
+  const data=cards[id];
+  document.getElementById('holoTitle').textContent=data.title;
+  document.getElementById('holoDesc').textContent=data.desc;
+  document.getElementById('holoAnim').innerHTML=data.svg;
+  panel.classList.add('active');
+  navigator.vibrate&&navigator.vibrate(35);
+}
+
+function closeWarning(confirmed){
+  document.getElementById('warnModal').classList.remove('show');
+  if(confirmed&&pendingWarnCard){
+    activateCard(pendingWarnCard,1,document.getElementById('holoPanel'));
+  }
+  pendingWarnCard=null;
+}
+
+// ── Relatório escondido (Minalbo) ──────────────────────────────
+function openReport(){
+  document.getElementById('reportModal').classList.add('show');
+  navigator.vibrate&&navigator.vibrate(40);
+}
+function closeReport(){
+  document.getElementById('reportModal').classList.remove('show');
+}
+
+// ── Mandachuva → Page 4 ───────────────────────────────────────
+let rainTimer=null;
+
+function mandachuvaPress(btn){
+  btn.classList.add('pulse');
+  navigator.vibrate&&navigator.vibrate([50,30,80,50,120]);
+
+  const flash=document.createElement('div');
+  flash.style.cssText='position:fixed;inset:0;z-index:999;background:rgba(77,166,255,.22);pointer-events:none;animation:fo .95s ease forwards;';
+  document.body.appendChild(flash);
+  if(!document.getElementById('_fls')){
+    const s=document.createElement('style');s.id='_fls';
+    s.textContent='@keyframes fo{0%{opacity:1}100%{opacity:0}}';
+    document.head.appendChild(s);
+  }
+
+  setTimeout(()=>{
+    btn.classList.remove('pulse'); flash.remove();
+    currentCard=null;
+    document.querySelectorAll('.menu-card').forEach(c=>c.classList.remove('selected'));
+    document.getElementById('holoPanel').classList.remove('active');
+    startRainPage();
+  },980);
+}
+
+function startRainPage(){
+  goTo(4);
+  buildRainDrops();
+
+  // barra de carregamento (sem contagem visível) — 40s
+  const DURATION=40;
+  let seconds=DURATION;
+  const barEl=document.getElementById('rainBar');
+  barEl.style.width='0%';
+
+  if(rainTimer) clearInterval(rainTimer);
+  rainTimer=setInterval(()=>{
+    seconds--;
+    barEl.style.width=((DURATION-seconds)/DURATION*100)+'%';
+    if(seconds<=0){
+      clearInterval(rainTimer);
+      rainTimer=null;
+      goTo(1);
+    }
+  },1000);
+}
+
+function buildRainDrops(){
+  const container=document.getElementById('rainParticles');
+  container.innerHTML='';
+  for(let i=0;i<55;i++){
+    const d=document.createElement('div');
+    d.className='rain-drop';
+    const left=Math.random()*100;
+    const height=Math.random()*60+30;
+    const duration=Math.random()*1.5+0.8;
+    const delay=Math.random()*3;
+    d.style.cssText=`left:${left}%;height:${height}px;animation-duration:${duration}s;animation-delay:${delay}s;opacity:${Math.random()*.5+.2}`;
+    container.appendChild(d);
+  }
+}
+
+// ── Partículas do logo (page 1) — efeito de desfragmentação ────
+function buildTreeParticles(){
+  const container=document.getElementById('treeParticles');
+  if(!container) return;
+  container.innerHTML='';
+  for(let i=0;i<34;i++){
+    const p=document.createElement('div');
+    p.className='tree-particle';
+    const ang=Math.random()*Math.PI*2;
+    const dist=Math.random()*150+90;
+    const tx=Math.cos(ang)*dist;
+    const ty=Math.sin(ang)*dist - 30; // leve tendência para cima
+    const dur=(Math.random()*2.5+2.5).toFixed(2);
+    const del=(Math.random()*4).toFixed(2);
+    const size=(Math.random()*5+3).toFixed(1);
+    p.style.setProperty('--tx',tx.toFixed(0)+'px');
+    p.style.setProperty('--ty',ty.toFixed(0)+'px');
+    p.style.setProperty('--dur',dur+'s');
+    p.style.setProperty('--del',del+'s');
+    p.style.width=size+'px'; p.style.height=size+'px';
+    container.appendChild(p);
+  }
+}
+buildTreeParticles();
+</script>
+</body>
+</html>
